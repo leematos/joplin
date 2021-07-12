@@ -63,8 +63,20 @@ class FileApiDriverAmazonS3 {
 				Bucket: this.s3_bucket_,
 				Key: key,
 			}, (err, response) => {
-				if (err) reject(err);
-				else resolve(response);
+
+				// The below check is to work around an iOS error case where a response
+				// is returned, no error is returned, but somewhere in the depths of RN
+				// We get [XMLParserError: Non-whitespace before first tag.
+				// TODO: Convert to aws-sdk-js-v3 API which doesn't cause this issue.
+
+				if (Platform.OS === 'ios' && response.hasOwnProperty('ContentLength') && err === null){
+                                        resolve(response);
+                                }
+                                else if (err) {
+					reject(err);
+				}else {
+					resolve(response);
+				}
 			});
 		});
 	}
